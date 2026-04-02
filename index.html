@@ -11,7 +11,7 @@
     /* ── TOKENS ─────────────────────────────────────────────── */
     :root {
       --ink:        #1a1714;
-      --paper:      #f5f0e8;
+      --paper:      #ffffff;
       --cream:      #ede8dc;
       --rule:       #c8bfad;
       --accent-red: #c0392b;
@@ -431,8 +431,8 @@
 
   <!-- ── MASTHEAD ──────────────────────────────────────── -->
   <header class="masthead">
-    <div class="masthead-title">SF Crime Data Story &nbsp;·&nbsp; Social Data Analysis</div>
-    <div class="masthead-meta">Spring 2026 &nbsp;·&nbsp; Week 8 Assignment</div>
+    <div class="masthead-title">SF Crime Data Story &nbsp;·&nbsp; Social Data Analysis & Visualization</div>
+    <div class="masthead-meta">Spring 2026 &nbsp;·&nbsp; Assignment 2</div>
   </header>
 
   <!-- ── HERO ──────────────────────────────────────────── -->
@@ -444,9 +444,9 @@
     <p class="hero-sub">
       A data story about San Francisco, homelessness, and the gap between reporting and reality
     </p>
-    <p class="hero-byline">
-      Analysis by <span>Your Name / Group Name</span> &nbsp;·&nbsp;
-      Data: SFPD Incident Reports, SF OpenData &nbsp;·&nbsp; April 2026
+    <p class="hero-byline"> 
+      Analysis by <span>Christian Divert Colberg, Gustav Hylsberg Jacobsen, Cemile Demir</span> 
+      <br> Data: SFPD Incident Reports, SF OpenData &nbsp;·&nbsp; April 2026
     </p>
   </section>
 
@@ -487,12 +487,8 @@
     </div>
 
     <!-- VIZ 1 -->
-    <div class="section-break">
-      <span class="section-break-text">Figure 1 — The Vanishing Crime</span>
-    </div>
 
     <div class="viz-block">
-      <div class="viz-label">Visualization 1 — Static Chart</div>
       <div class="viz-title">"Civil Sidewalks" Violations Reported by SFPD (2018–2025)</div>
 
       <!-- Swap this img src once you have the file in the repo -->
@@ -556,7 +552,6 @@
 
     <!-- VIZ 2 — Side-by-side maps -->
     <div class="viz-block">
-      <div class="viz-label">Visualization 2 — Interactive Maps</div>
       <div class="viz-title">Crime Hotspots: Before & After 2020</div>
 
       <div class="maps-row">
@@ -600,19 +595,37 @@
     </div>
 
     <div class="act-label">Act III</div>
-    <h2 class="act-heading">The reporting stopped. The problem didn't.</h2>
+    <h2 class="act-heading">What changed in 2020?</h2>
 
     <p class="prose">
       In January 2020, District Attorney Chesa Boudin took office on a platform of criminal justice reform.
       His office deprioritized prosecution of quality-of-life offenses, including the sit/lie ordinance that
-      had generated most Civil Sidewalks citations. SFPD, knowing the DA would not prosecute, largely stopped
-      filing such reports.
+      had generated most Civil Sidewalks reports. SFPD, knowing the DA would not prosecute, largely stopped
+      filing such reports. The data reflects not a change in behavior on the streets, but a change in what gets 
+      written down.
     </p>
 
     <p class="prose">
-      Meanwhile, San Francisco's biennial Point-in-Time homeless count — an independent street census
-      conducted every two years — tells a completely different story. The actual homeless population
-      grew from 8,035 in 2019 to 8,323 in 2024. The people did not disappear. The database entry did.
+      Some readers might wonder about COVID-19. The timing overlaps — pandemic restrictions began in March 2020. 
+      But the pandemic ended. San Francisco reopened. By 2024 and 2025 the city was operating normally, yet 
+      Civil Sidewalks reports had not returned. A temporary disruption does not produce a permanent change. A policy shift does.
+    </p>
+
+    <div class="section-break">
+      <span class="section-break-text">The Population the Data Forgot</span>
+    </div>
+
+    <h2 class="act-heading">The population the data forgot</h2>
+
+    <p class="prose">
+      The clearest evidence comes from outside the SFPD dataset. San Francisco conducts a biennial
+      Point-in-Time (PIT) count of every person experiencing homelessness on a given night. In 2019, the
+      total was 8,035 — including 5,180 unsheltered individuals. In 2024, it was 8,323. The unsheltered
+      count has fluctuated, but the overall homeless population only grew.
+    </p>
+
+    <p class="prose">
+      Homelessness did not decrease in San Francisco. The reports stopped. The problem did not.
     </p>
 
     <p class="prose">
@@ -623,7 +636,6 @@
 
     <!-- VIZ 3 — Interactive Plotly -->
     <div class="viz-block">
-      <div class="viz-label">Visualization 3 — Interactive Chart</div>
       <div class="viz-title">Crime Trends vs. Actual Homeless Population (2018–2025)</div>
 
       <iframe
@@ -657,35 +669,35 @@
 
     <!-- Conclusion -->
     <div class="section-break">
-      <span class="section-break-text">Conclusion</span>
+      <span class="section-break-text">Why This Matters</span>
     </div>
 
-    <h2 class="act-heading">What this means for data-driven policy</h2>
+    <h2 class="act-heading">Why this matters</h2>
 
     <p class="prose">
-      This story is ultimately about the limits of administrative data as a mirror of reality. Crime statistics
-      do not measure crime — they measure policing decisions. When enforcement priorities change, the numbers
-      change, regardless of what is happening on the street.
+      This is a concrete example of what Richardson, Schultz, and Crawford (2019) call <em>"dirty data"</em> —
+      the insight that police datasets are not neutral measurements of crime, but reflections of enforcement
+      priorities, political incentives, and institutional decisions. A naive analysis of SFPD data would
+      conclude that sidewalk-related offenses were eliminated. A careful one recognizes that only the
+      reporting was eliminated.
     </p>
-
+    
     <p class="prose">
-      For a data analyst, this is a critical lesson: a dramatic trend in a dataset may reflect a bureaucratic
-      shift rather than a real-world change. The appropriate response is to triangulate — to look for
-      corroborating or contradicting evidence in independent datasets, as we did here with the PIT count
-      and the geographic persistence of correlated crimes.
+    More broadly, crime statistics do not measure crime itself, but policing decisions. When enforcement priorities 
+    change, the numbers change, regardless of what is happening on the street. For anyone using crime data to draw 
+    conclusions — whether evaluating policy, allocating resources, or training a predictive model — this distinction matters.
     </p>
 
     <div class="pullquote">
       <p>
-        "A dramatic trend in administrative data may reflect a bureaucratic shift —
-        not a change in the world it purports to describe."
+        "A dramatic trend in administrative data may reflect a bureaucratic shift — not a change in the world it purports to describe."
       </p>
     </div>
 
     <p class="prose">
-      The Civil Sidewalks data is not fraudulent. It accurately records what police chose to report.
-      But interpreting that data without context — without asking <em>why</em> a number fell, and looking
-      for independent confirmation — would lead to a conclusion that is precisely wrong.
+      For anyone using crime data to draw conclusions — whether evaluating policy, allocating resources,
+      or training a predictive model — this distinction matters. The data does not lie. But it does not
+      tell the whole truth either.
     </p>
 
     <!-- References -->
@@ -722,7 +734,7 @@
   <footer>
     <p>
       Built with Python · Plotly · Folium · Matplotlib<br>
-      Social Data Analysis — DTU / Course Assignment · Spring 2026<br>
+      Social Data Analysis and Visualization — DTU / Course Assignment · Spring 2026<br>
       Data: SFPD Incident Reports via SF OpenData
     </p>
   </footer>
