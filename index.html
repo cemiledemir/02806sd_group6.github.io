@@ -3,741 +3,598 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Crime That Vanished — SF Crime Data Story</title>
+  <title>The Crime That Vanished — SF Data Story</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 
   <style>
-    /* ── TOKENS ─────────────────────────────────────────────── */
-    :root {
-      --ink:        #1a1714;
-      --paper:      #ffffff;
-      --cream:      #ede8dc;
-      --rule:       #c8bfad;
-      --accent-red: #c0392b;
-      --accent-dim: #8e6e5b;
-      --muted:      #6b5f52;
-      --highlight:  #f9e4d0;
-      --mono:       'JetBrains Mono', monospace;
-      --serif:      'Source Serif 4', Georgia, serif;
-      --display:    'Playfair Display', Georgia, serif;
-    }
-
-    /* ── RESET & BASE ───────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 18px; }
 
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: var(--serif);
-      font-size: 18px;
-      line-height: 1.72;
-      background: var(--paper);
-      color: var(--ink);
-      /* subtle paper grain */
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    :root {
+      --red:      #c0392b;
+      --red-light:#fdf0ee;
+      --red-mid:  #f4c5bf;
+      --ink:      #1a1714;
+      --ink-soft: #3d3530;
+      --muted:    #6b5f52;
+      --rule:     #d8d0c0;
+      --cream:    #f4f0e8;
+      --white:    #ffffff;
+      --serif:    'Source Serif 4', Georgia, serif;
+      --display:  'Playfair Display', Georgia, serif;
+      --mono:     'JetBrains Mono', monospace;
     }
 
-    /* ── MASTHEAD ───────────────────────────────────────────── */
-    .masthead {
-      border-bottom: 3px double var(--rule);
-      padding: 1.2rem 2rem 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--cream);
-    }
-    .masthead-title {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .masthead-meta {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.12em;
-      color: var(--accent-dim);
-    }
+    body { font-family: var(--serif); background: var(--white); color: var(--ink); overflow-x: hidden; }
 
-    /* ── HERO ───────────────────────────────────────────────── */
+    /* ── SCROLL REVEAL ───────────────────────────────────── */
+    .reveal {
+      opacity: 0; transform: translateY(32px);
+      transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.22s; }
+    .reveal-delay-3 { transition-delay: 0.36s; }
+
+    /* ── NAV ─────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 2rem;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    nav.scrolled { border-color: var(--rule); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .nav-brand { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .nav-links { display: flex; gap: 1.8rem; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--red); }
+    .nav-progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--red); z-index: 101; width: 0%; transition: width 0.1s linear; }
+
+    /* ── HERO ────────────────────────────────────────────── */
     .hero {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 5rem 2rem 3.5rem;
-      position: relative;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 2rem; position: relative; overflow: hidden;
     }
     .hero::before {
-      content: '';
-      display: block;
-      width: 3px;
-      height: 5rem;
-      background: var(--accent-red);
-      margin-bottom: 2rem;
+      content: ''; position: absolute; inset: 0;
+      background-image: linear-gradient(var(--rule) 1px, transparent 1px), linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+      background-size: 60px 60px; opacity: 0.18; pointer-events: none;
     }
-    .hero-kicker {
-      font-family: var(--mono);
-      font-size: 0.8rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent-red);
-      margin-bottom: 1.4rem;
-    }
-    .hero-headline {
-      font-family: var(--display);
-      font-size: clamp(2.6rem, 5.5vw, 4.4rem);
-      font-weight: 900;
-      line-height: 1.08;
-      color: var(--ink);
-      margin-bottom: 0.6rem;
-    }
-    .hero-headline em {
-      font-style: italic;
-      color: var(--accent-red);
-    }
-    .hero-sub {
-      font-family: var(--display);
-      font-size: clamp(1.1rem, 2vw, 1.45rem);
-      font-weight: 300;
-      font-style: italic;
-      color: var(--muted);
-      margin-bottom: 2.5rem;
-      border-top: 1px solid var(--rule);
-      border-bottom: 1px solid var(--rule);
-      padding: 0.9rem 0;
-    }
-    .hero-byline {
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-    }
-    .hero-byline span {
-      color: var(--accent-dim);
-      font-weight: 600;
-    }
+    .hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 200px; background: linear-gradient(transparent, var(--white)); pointer-events: none; }
+    .hero-inner { position: relative; z-index: 1; max-width: 1000px; }
+    .hero-kicker { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--red); margin-bottom: 1rem; opacity: 0; animation: fadeUp 0.8s 0.2s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .hero-headline { font-family: var(--display); font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 900; line-height: 1.04; letter-spacing: -0.03em; color: var(--ink); margin-bottom: 0.2rem; opacity: 0; animation: fadeUp 0.9s 0.38s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .hero-headline em { font-style: italic; color: var(--red); position: relative; }
+    .hero-headline em::after { content: ''; position: absolute; bottom: 8px; left: 0; right: 0; height: 3px; background: var(--red); transform: scaleX(0); transform-origin: left; animation: lineGrow 0.6s 1.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .hero-sub { font-family: var(--display); font-size: clamp(1.05rem, 1.8vw, 1.3rem); font-style: italic; font-weight: 300; color: var(--muted); max-width: 560px; margin: 0 auto 2.8rem; line-height: 1.6; opacity: 0; animation: fadeUp 0.8s 0.55s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .hero-byline { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; color: var(--muted); line-height: 1.9; opacity: 0; animation: fadeUp 0.8s 0.7s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .hero-byline strong { color: var(--ink-soft); font-weight: 600; }
+    .scroll-hint { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; opacity: 0; animation: fadeUp 0.8s 1.1s ease forwards; }
+    .scroll-hint span { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+    .scroll-arrow { width: 20px; height: 20px; border-right: 2px solid var(--red); border-bottom: 2px solid var(--red); transform: rotate(45deg); animation: bounce 1.6s ease infinite; }
 
-    /* ── LAYOUT ─────────────────────────────────────────────── */
-    .story {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 0 2rem 6rem;
-    }
+    /* ── CHAPTER ─────────────────────────────────────────── */
+    .chapter { display: flex; align-items: center; gap: 1rem; margin: 0 0 2.4rem; }
+    .chapter-num { font-family: var(--display); font-size: 3.5rem; font-weight: 900; color: var(--red-mid); line-height: 1; flex-shrink: 0; }
+    .chapter-act { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-bottom: 0.25rem; }
+    .chapter-title { font-family: var(--display); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; line-height: 1.15; color: var(--ink); }
 
-    /* ── PULL QUOTE / DROP CAP INTRO ─────────────────────────── */
-    .drop-intro {
-      font-size: clamp(1rem, 1.4vw, 1.15rem);
-      color: var(--ink);
-      margin-bottom: 2.4rem;
-    }
-    .drop-intro::first-letter {
-      font-family: var(--display);
-      font-size: 5.5em;
-      font-weight: 900;
-      float: left;
-      line-height: 0.8;
-      padding-right: 0.1em;
-      padding-top: 0.05em;
-      color: var(--accent-red);
-    }
+    /* ── LAYOUT ──────────────────────────────────────────── */
+    .section { max-width: 1000px; margin: 0 auto; padding: 2rem 2rem; }
+    .divider { max-width: 1000px; margin: 0 auto; padding: 0 2rem; height: 1px; background: linear-gradient(to right, transparent, var(--rule), transparent); }
 
-    .prose {
-      font-size: clamp(1rem, 1.3vw, 1.1rem);
-      color: var(--ink);
-      margin-bottom: 1.6rem;
-    }
-    .prose + .prose { margin-top: -0.6rem; }
+    /* ── PROSE ───────────────────────────────────────────── */
+    .prose { font-size: clamp(1.1rem, 1.6vw, 1.25rem); line-height: 1.72; color: var(--ink); margin-bottom: 1rem; }
+    .prose-large { font-size: clamp(1.1rem, 1.6vw, 1.25rem); line-height: 1.72; color: var(--ink); margin-bottom: 1.8rem; }
+    .drop-cap::first-letter { font-family: var(--display); font-size: 5.2em; font-weight: 900; float: left; line-height: 0.78; padding-right: 0.1em; padding-top: 0.08em; color: var(--red); }
 
-    /* ── SECTION BREAKS ──────────────────────────────────────── */
-    .section-break {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin: 3.5rem 0 2.8rem;
-    }
-    .section-break::before,
-    .section-break::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--rule);
-    }
-    .section-break-text {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--muted);
-      white-space: nowrap;
-    }
+    /* ── PULL QUOTE ──────────────────────────────────────── */
+    .pullquote { border-left: 4px solid var(--red); background: var(--red-light); margin: 3rem 0; padding: 1.6rem 2rem; }
+    .pullquote p { font-family: var(--display); font-size: clamp(1.2rem, 2vw, 1.5rem); font-style: italic; color: var(--ink); line-height: 1.45; }
 
-    /* ── ACT HEADINGS ────────────────────────────────────────── */
-    .act-label {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent-dim);
-      margin-bottom: 0.5rem;
-    }
-    .act-heading {
-      font-family: var(--display);
-      font-size: clamp(1.6rem, 3.5vw, 2.3rem);
-      font-weight: 700;
-      line-height: 1.15;
-      color: var(--ink);
-      margin-bottom: 1.8rem;
-    }
+    /* ── DARK STAT PANEL ─────────────────────────────────── */
+    .stat-panel { background: var(--white); color: var(--white); padding: 5rem 2rem; text-align: center; }
+    .stat-panel-inner { max-width: 900px; margin: 0 auto; }
+    .stat-panel-label { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--red-mid); margin-bottom: 2.5rem;display: none }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: transparent; border: 2px solid transparent; }
+    .stat-cell { background: var(--ink); padding: 2.5rem 1.5rem; text-align: center; border-radius: 4px}
+    .stat-number { font-family: var(--display); font-size: clamp(2.6rem, 5vw, 4rem); font-weight: 900; color: var(--red); line-height: 1; margin-bottom: 0.6rem; }
+    .stat-label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: #a09080; line-height: 1.5; }
 
-    /* ── PULL QUOTE ──────────────────────────────────────────── */
-    .pullquote {
-      border-left: 4px solid var(--accent-red);
-      background: var(--highlight);
-      margin: 2.8rem 0;
-      padding: 1.4rem 2rem;
-    }
-    .pullquote p {
-      font-family: var(--display);
-      font-size: clamp(1.15rem, 2.2vw, 1.45rem);
-      font-style: italic;
-      color: var(--ink);
-      line-height: 1.45;
-    }
-
-    /* ── STAT CALLOUTS ───────────────────────────────────────── */
-    .stats-row {
-      display: flex;
-      gap: 1.5rem;
-      margin: 2.5rem 0;
-      flex-wrap: wrap;
-    }
-    .stat-box {
-      flex: 1;
-      min-width: 160px;
-      background: var(--cream);
-      border: 1px solid var(--rule);
-      border-top: 3px solid var(--accent-red);
-      padding: 1.2rem 1.4rem;
-    }
-    .stat-number {
-      font-family: var(--display);
-      font-size: 2.6rem;
-      font-weight: 900;
-      color: var(--accent-red);
-      line-height: 1;
-      margin-bottom: 0.3rem;
-    }
-    .stat-label {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    /* ── VISUALIZATION CONTAINERS ────────────────────────────── */
-    .viz-block {
-      margin: 3.5rem 0;
-    }
-    .viz-label {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--accent-dim);
-      margin-bottom: 0.6rem;
-    }
-    .viz-title {
-      font-family: var(--display);
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--ink);
-      margin-bottom: 1rem;
-    }
-    .viz-frame {
-      width: 100%;
-      border: 1px solid var(--rule);
-      background: white;
-      display: block;
-    }
-    /* Static image */
-    .viz-frame-img {
-      width: 100%;
-      height: auto;
-      display: block;
-      border: 1px solid var(--rule);
-      background: white;
-    }
-    /* iframe for interactive */
-    .viz-frame-iframe {
-      width: 100%;
-      height: 520px;
-      border: 1px solid var(--rule);
-      background: white;
-      display: block;
-    }
-    .viz-frame-map {
-      width: 100%;
-      height: 480px;
-      border: 1px solid var(--rule);
-      background: white;
-      display: block;
-    }
-
-    /* Caption box */
-    .caption {
-      background: var(--cream);
-      border-left: 2px solid var(--rule);
-      padding: 0.9rem 1.2rem;
-      margin-top: 0.8rem;
-    }
-    .caption-fig {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent-dim);
-      margin-bottom: 0.35rem;
-    }
-    .caption p {
-      font-size: 0.88rem;
-      line-height: 1.55;
-      color: var(--muted);
-      font-style: italic;
-    }
-
-    /* Side-by-side maps */
-    .maps-row {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .maps-row .map-col {
-      flex: 1;
-      min-width: 280px;
-    }
+    /* ── SIDE-BY-SIDE MAPS ───────────────────────────────── */
+    .maps-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
     .map-col-label {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.4rem;
-      text-align: center;
+      font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.15em;
+      text-transform: uppercase; text-align: center; margin-bottom: 0.5rem;
+      padding: 0.4rem 0.8rem; display: inline-block; border-radius: 3px;
+    }
+    .map-col-label.pre  { color: var(--red);    background: var(--red-light); border-left: 3px solid var(--red); }
+    .map-col-label.post { color: #185FA5; background: #e6f1fb; border-left: 3px solid #378ADD; }
+    .map-col-header { margin-bottom: 0.6rem; }
+    .map-col-title {
+      font-family: var(--display); font-size: 1rem; font-weight: 700;
+      color: var(--ink); margin-top: 0.3rem;
+    }
+    .map-iframe {
+      width: 100%; height: 420px; border: 1px solid var(--rule);
+      display: block; background: var(--cream); border-radius: 3px;
+    }
+    @media (max-width: 768px) {
+      .maps-row { grid-template-columns: 1fr; }
+      .map-iframe { height: 340px; }
     }
 
-    /* ── REFERENCES ──────────────────────────────────────────── */
-    .references {
-      margin-top: 4rem;
-      padding-top: 2rem;
-      border-top: 2px solid var(--rule);
-    }
-    .references-heading {
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 1.2rem;
-    }
-    .ref-list {
-      list-style: none;
-      counter-reset: ref;
-    }
-    .ref-list li {
-      counter-increment: ref;
-      display: flex;
-      gap: 0.8rem;
-      font-size: 0.88rem;
-      color: var(--muted);
-      margin-bottom: 0.7rem;
-      line-height: 1.5;
-    }
-    .ref-list li::before {
-      content: "[" counter(ref) "]";
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      color: var(--accent-dim);
-      flex-shrink: 0;
-      margin-top: 0.2rem;
-    }
-    .ref-list a {
-      color: var(--accent-dim);
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
+    /* ── VIZ BLOCKS ──────────────────────────────────────── */
+    .viz-block { margin: 1.5rem 0; }
+    .viz-kicker { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); margin-bottom: 0.5rem; }
+    .viz-title  { font-family: var(--display); font-size: 1.2rem; font-weight: 700; color: var(--ink); margin-bottom: 1rem; }
+    .viz-img    { width: 100%; height: auto; display: block; border: 1px solid var(--rule); }
+    .viz-iframe-tall { width: 100%; height: 540px; border: 1px solid var(--rule); display: block; background: var(--cream); }
+    .viz-placeholder { width: 100%; height: 400px; background: var(--cream); border: 2px dashed var(--rule); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem; color: var(--muted); font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-align: center; padding: 2rem; }
+    .caption { margin-top: 0.8rem; padding: 0.9rem 1.2rem; background: var(--cream); border-left: 3px solid var(--red); }
+    .caption-fig { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red); margin-bottom: 0.3rem; }
+    .caption p { font-size: 0.86rem; line-height: 1.6; color: var(--muted); font-style: italic; }
 
-    /* ── FOOTER ──────────────────────────────────────────────── */
-    footer {
-      background: var(--ink);
-      color: var(--cream);
-      padding: 2.5rem 2rem;
-      text-align: center;
-    }
-    footer p {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
-      opacity: 0.6;
-      line-height: 1.8;
-    }
+    /* ── COUNTER BANNER ──────────────────────────────────── */
+    .counter-banner { background: var(--red); color: var(--white); padding: 3rem 2rem; text-align: center; overflow: hidden; position: relative; }
+    .counter-banner::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 40px 40px; }
+    .counter-banner-inner { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; }
+    .counter-banner-label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.75; margin-bottom: 2.5rem; }
+    .counter-duo { display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+    .counter-item { text-align: center; }
+    .counter-num { font-family: var(--display); font-size: clamp(3.5rem, 8vw, 6rem); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+    .counter-sub { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.75; margin-top: 0.5rem; }
+    .counter-arrow { font-family: var(--display); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; opacity: 0.5; }
+    .counter-context { margin-top: 2rem; font-family: var(--display); font-size: clamp(1rem, 1.8vw, 1.3rem); font-style: italic; opacity: 0.88; line-height: 1.5; }
 
-    /* ── PLACEHOLDER for missing viz files ───────────────────── */
-    .viz-placeholder {
-      width: 100%;
-      height: 420px;
-      background: var(--cream);
-      border: 2px dashed var(--rule);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0.8rem;
-    }
-    .viz-placeholder .ph-icon {
-      font-size: 2.5rem;
-      opacity: 0.35;
-    }
-    .viz-placeholder p {
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      color: var(--muted);
-      letter-spacing: 0.1em;
-      text-align: center;
-      padding: 0 2rem;
-    }
+    /* ── REFERENCES & FOOTER ─────────────────────────────── */
+    .references { margin-top: 4rem; padding-top: 2.5rem; border-top: 1px solid var(--rule); }
+    .references-heading { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.2rem; }
+    .ref-list { list-style: none; counter-reset: ref; }
+    .ref-list li { counter-increment: ref; display: flex; gap: 0.8rem; font-size: 0.88rem; color: var(--muted); margin-bottom: 0.75rem; line-height: 1.55; }
+    .ref-list li::before { content: "[" counter(ref) "]"; font-family: var(--mono); font-size: 0.68rem; color: var(--red); flex-shrink: 0; margin-top: 0.15rem; }
+    .ref-list a { color: var(--red); text-decoration: underline; text-underline-offset: 3px; }
+    footer { background: var(--ink); color: var(--cream); padding: 3rem 2rem; text-align: center; }
+    footer p { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em; opacity: 0.5; line-height: 2; }
 
-    /* ── FADE-IN ANIMATION ───────────────────────────────────── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(22px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .hero-kicker  { animation: fadeUp 0.55s ease both; animation-delay: 0.05s; }
-    .hero-headline{ animation: fadeUp 0.6s  ease both; animation-delay: 0.18s; }
-    .hero-sub     { animation: fadeUp 0.6s  ease both; animation-delay: 0.3s;  }
-    .hero-byline  { animation: fadeUp 0.6s  ease both; animation-delay: 0.42s; }
+    /* ── KEYFRAMES ───────────────────────────────────────── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes lineGrow { to { transform: scaleX(1); } }
+    @keyframes bounce { 0%, 100% { transform: rotate(45deg) translateY(0); } 50% { transform: rotate(45deg) translateY(5px); } }
 
-    /* ── RESPONSIVE ──────────────────────────────────────────── */
-    @media (max-width: 640px) {
-      .masthead { flex-direction: column; gap: 0.3rem; text-align: center; }
-      .viz-frame-iframe { height: 380px; }
-      .viz-frame-map    { height: 360px; }
-      .stats-row        { flex-direction: column; }
+    /* ── RESPONSIVE ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+      nav { padding: 0.75rem 1.2rem; }
+      .nav-links { display: none; }
+      .sticky-container { flex-direction: column; }
+      .sticky-graphic { position: relative; top: 0; width: 100%; padding-right: 0; margin-bottom: 2rem; }
+      .sticky-steps { width: 100%; padding-top: 0; }
+      .sticky-step { min-height: auto; opacity: 1; transform: none; }
+      .stat-grid { grid-template-columns: 1fr; }
+      .counter-duo { flex-direction: column; gap: 1.5rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ── MASTHEAD ──────────────────────────────────────── -->
-  <header class="masthead">
-    <div class="masthead-title">SF Crime Data Story &nbsp;·&nbsp; Social Data Analysis & Visualization</div>
-    <div class="masthead-meta">Spring 2026 &nbsp;·&nbsp; Assignment 2</div>
-  </header>
+  <div class="nav-progress" id="progress-bar"></div>
 
-  <!-- ── HERO ──────────────────────────────────────────── -->
+  <nav id="main-nav">
+    <div class="nav-brand">SF Crime Data Story &nbsp;·&nbsp; Social Data Analysis and Visualization</div>
+    <ul class="nav-links">
+      <li><a href="#act1">Act I</a></li>
+      <li><a href="#act2">Act II</a></li>
+      <li><a href="#act3">Act III</a></li>
+      <li><a href="#conclusion">Conclusion</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── HERO ─────────────────────────────────────────────── -->
   <section class="hero">
-    <div class="hero-kicker">San Francisco &nbsp;·&nbsp; 2018 – 2025</div>
-    <h1 class="hero-headline">
-      The Crime<br>That <em>Vanished</em> —<br>But the Problem Didn't
-    </h1>
-    <p class="hero-sub">
-      A data story about San Francisco, homelessness, and the gap between reporting and reality
-    </p>
-    <p class="hero-byline"> 
-      Analysis by <span>Christian Divert Colberg, Gustav Hylsberg Jacobsen, Cemile Demir</span> 
-      <br> Data: SFPD Incident Reports, SF OpenData &nbsp;·&nbsp; April 2026
-    </p>
+    <div class="hero-inner">
+      <div class="hero-kicker">San Francisco &nbsp;·&nbsp; 2018 – 2025 &nbsp;·&nbsp; SFPD Data</div>
+      <h1 class="hero-headline">
+        The Crime<br>That <em>Vanished</em> —<br>But the Problem Didn't
+      </h1>
+      <p class="hero-sub">
+        A data story about San Francisco, homelessness, and the gap between reporting and reality
+      </p>
+      <p class="hero-byline">
+        By <strong>Christian Divert Colberg, Gustav Hylsberg Jacobsen, Cemile Demir</strong><br>
+        Data: SFPD Incident Reports via SF OpenData &nbsp;·&nbsp; April 2026
+      </p>
+    </div>
+    <div class="scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-arrow"></div>
+    </div>
   </section>
 
-  <!-- ── STORY BODY ─────────────────────────────────────── -->
-  <main class="story">
+  <!-- ── ACT I ─────────────────────────────────────────────── -->
+  <section class="section" id="act1" >
+    <div class="chapter reveal">
+      <div class="chapter-num">I</div>
+      <div class="chapter-text">
+        <div class="chapter-act">Act One</div>
+        <div class="chapter-title">The crime that vanished</div>
+      </div>
+    </div>
 
-    <!-- ACT 1 -->
-    <p class="drop-intro">
+    <p class="prose-large drop-cap reveal reveal-delay-1">
       In 2019, San Francisco police filed thousands of reports for "Civil Sidewalks" violations — a catch-all
       category covering offenses like camping on sidewalks, aggressive panhandling, and blocking public
       rights-of-way. These reports were concentrated in the Tenderloin, SoMa, and Mission — neighborhoods
       long associated with visible homelessness.
     </p>
-
-    <p class="prose">
-      By 2021, the number was close to zero. And it stayed there.
-    </p>
-
-    <p class="prose">
+    <p class="prose reveal reveal-delay-2">By 2021, the number was close to zero. And it stayed there.</p>
+    <p class="prose reveal reveal-delay-3">
       If you stopped reading here, you might conclude that San Francisco had solved one of its most visible
       urban problems. That is the story the raw numbers appear to tell. But it is not the whole story.
     </p>
+  </section>
 
-    <!-- Key stats -->
-    <div class="stats-row">
-      <div class="stat-box">
-        <div class="stat-number">~0</div>
-        <div class="stat-label">Civil Sidewalks reports after 2020</div>
+    <!-- ── DARK STAT PANEL ──────────────────────────────────────── -->
+    <div class="stat-panel-inner">
+    <div class="stat-grid">
+      <div class="stat-cell reveal reveal-delay-1">
+        <div class="stat-number" id="act1-cnt-1">332</div>
+        <div class="stat-label">Civil Sidewalks reports<br>at its peak in 2019</div>
       </div>
-      <div class="stat-box">
-        <div class="stat-number">8,323</div>
-        <div class="stat-label">Homeless people in SF — 2024 count</div>
+      <div class="stat-cell reveal reveal-delay-2">
+        <div class="stat-number" id="act1-cnt-2">25</div>
+        <div class="stat-label">Reports filed in 2020<br>as the policy shifted</div>
       </div>
-      <div class="stat-box">
-        <div class="stat-number">+3.6%</div>
-        <div class="stat-label">Homeless population growth 2019→2024</div>
+      <div class="stat-cell reveal reveal-delay-3">
+        <div class="stat-number" id="act1-cnt-3">92%</div>
+        <div class="stat-label">Immediate drop in reports<br>within just twoß years</div>
       </div>
     </div>
+    </div>
 
-    <!-- VIZ 1 -->
 
-    <div class="viz-block">
+  <!-- ── VIZ 1 ──────────────────────────────────────────────── -->
+  <section class="section" style="padding-top: 0;">
+    <div class="viz-block reveal">
       <div class="viz-title">"Civil Sidewalks" Violations Reported by SFPD (2018–2025)</div>
-
-      <!-- Swap this img src once you have the file in the repo -->
       <img
-        class="viz-frame-img"
+        class="viz-img"
         src="images/viz1_civil_sidewalks.png"
-        alt="Bar chart showing Civil Sidewalks violations dropping to near zero after 2020"
+        alt="Bar chart: Civil Sidewalks violations drop to near zero after 2020"
         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
       />
       <div class="viz-placeholder" style="display:none;">
-        <div class="ph-icon">📊</div>
-        <p>Place <code>images/viz1_civil_sidewalks.png</code> in your repo to display the chart here.</p>
+        <div>[ Chart ]</div>
+        <p>Place <code>images/viz1_civil_sidewalks.png</code> here</p>
       </div>
-
       <div class="caption">
         <div class="caption-fig">Figure 1</div>
         <p>
-          "Civil Sidewalks" violations — covering offenses like sitting or lying on sidewalks, aggressive
-          panhandling, and encampments — dropped from thousands of incidents per year to near-zero after 2020.
-          The dashed line marks when DA Chesa Boudin took office in January 2020, bringing a policy shift away
-          from prosecuting quality-of-life offenses. A reader might attribute the drop to COVID-19 lockdowns,
-          but the numbers remain near zero through 2024 and 2025, years when the city was fully reopened.
-          This is not a pandemic artifact — it is a change in enforcement and reporting.
+          "Civil Sidewalks" violations — covering offenses like sitting or lying on sidewalks, aggressive panhandling, 
+          and encampments — dropped from thousands of incidents per year to near-zero after 2020. The dashed line marks 
+          when DA Chesa Boudin took office in January 2020, bringing a policy shift away from prosecuting quality-of-life
+          offenses. A reader might attribute the drop to COVID-19 lockdowns, but the numbers remain near zero through 2024 
+          and 2025, years when the city was fully reopened. This is not a pandemic artifact — it is a change in enforcement and reporting.
         </p>
       </div>
     </div>
+  </section>
 
-    <!-- ACT 2 intro text -->
-    <div class="section-break">
-      <span class="section-break-text">Act II — The Geography Doesn't Lie</span>
-    </div>
 
-    <div class="act-label">Act II</div>
-    <h2 class="act-heading">What the data actually shows</h2>
 
-    <p class="prose">
-      The dataset we work with is the San Francisco Police Department's Incident Reports, publicly available
-      through SF OpenData. It covers every police-reported incident in the city from 2018 to early 2026 —
-      hundreds of thousands of records, each tagged with a crime category, date, GPS coordinates, and
-      police district.
-    </p>
+  <!-- ── ACT II — SIDE-BY-SIDE MAPS ──────────────────────── -->
+  <div class="divider"></div>
+  <section id="act2" style="padding: 2rem 0;">
+    <div class="section" style="padding-bottom: 2rem;">
+      <div class="chapter reveal">
+        <div class="chapter-num">II</div>
+        <div class="chapter-text">
+          <div class="chapter-act">Act Two</div>
+          <div class="chapter-title">What the data actually shows</div>
+        </div>
+      </div>
 
-    <p class="prose">
-      To test whether the decline in Civil Sidewalks reflects reality on the ground, we identified which other
-      crime categories share the most similar temporal pattern. Using Pearson correlation across yearly counts,
-      we found the crimes whose trends most closely tracked Civil Sidewalks before 2020. If homelessness-related
-      activity had genuinely declined, we would expect those correlated crimes to follow the same downward path.
-    </p>
-
-    <div class="pullquote">
-      <p>
-        "The hotspots didn't move. The underlying activity persists in the same neighborhoods.
-        Only the <em>'Civil Sidewalks'</em> label vanished from the reports."
+      <p class="prose reveal">
+        The dataset we work with is the San Francisco Police Department's Incident Reports, publicly 
+        available through SF OpenData. It covers every police-reported incident in the city from 2018 
+        to early 2026 — hundreds of thousands of records, each tagged with a crime category, date, time, 
+        GPS coordinates, and police district.
       </p>
+      <p class="prose reveal">
+        To test whether the decline in Civil Sidewalks reflects reality on the ground, we identified which 
+        other crime categories share the most similar temporal pattern. Using Pearson correlation across yearly 
+        counts, we found the crimes whose trends most closely tracked Civil Sidewalks before 2020. If homelessness-related 
+        activity had genuinely declined, we would expect those correlated crimes to follow the same downward path.
+      </p>
+
+      <p class="prose reveal">
+        They did not. The maps below show the geographic hotspots of these crimes before and after 2020.
+        The Tenderloin and SoMa remain dominant in both periods.
+      </p>
+
+      <div class="pullquote reveal">
+        <p>"The hotspots didn't move. The underlying activity persists in the same neighborhoods. 
+          Only the 'Civil Sidewalks' label vanished from the reports."</p>
+      </div>
+      
     </div>
 
-    <p class="prose">
-      The correlated crimes did not disappear. Figure 2 maps the geographic hotspots of these crimes
-      before and after 2020. The Tenderloin and SoMa remain dominant both before and after the policy shift.
-    </p>
+    <!-- Side-by-side maps -->
+    <div class="section" style="padding-top: 0;">
+      <div class="viz-block reveal">
+        <div class="viz-title">Crime Hotspots: Before &amp; After 2020</div>
 
-    <!-- VIZ 2 — Side-by-side maps -->
-    <div class="viz-block">
-      <div class="viz-title">Crime Hotspots: Before & After 2020</div>
-
-      <div class="maps-row">
-        <div class="map-col">
-          <div class="map-col-label">Pre-2020 · Civil Sidewalks</div>
-          <iframe
-            class="viz-frame-map"
-            src="visualizations/viz2_folium_pre2020.html"
-            title="Pre-2020 Civil Sidewalks heatmap"
-            loading="lazy"
-            onerror="this.style.display='none';"
-          ></iframe>
+        <div class="maps-row">
+          <!-- Pre-2020 -->
+          <div>
+            <div class="map-col-header">
+              <span class="map-col-label pre">Pre-2020 · Civil Sidewalks</span>
+              <div class="map-col-title">Before the policy shift</div>
+            </div>
+            <iframe
+              class="map-iframe"
+              src="visualizations/viz2_folium_pre2020.html"
+              title="Pre-2020 Civil Sidewalks heatmap"
+              loading="lazy"
+            ></iframe>
+          </div>
+          <!-- Post-2020 -->
+          <div>
+            <div class="map-col-header">
+              <span class="map-col-label post">Post-2020 · Correlated Crimes</span>
+              <div class="map-col-title">After the policy shift</div>
+            </div>
+            <iframe
+              class="map-iframe"
+              src="visualizations/viz2_folium_post2020.html"
+              title="Post-2020 correlated crimes heatmap"
+              loading="lazy"
+            ></iframe>
+          </div>
         </div>
-        <div class="map-col">
-          <div class="map-col-label">Post-2020 · Correlated Crimes</div>
-          <iframe
-            class="viz-frame-map"
-            src="visualizations/viz2_folium_post2020.html"
-            title="Post-2020 correlated crimes heatmap"
-            loading="lazy"
-            onerror="this.style.display='none';"
-          ></iframe>
+        <div class="caption">
+          <div class="caption-fig">Figure 2</div>
+          <p>
+            Heatmaps of homelessness-related crime in San Francisco. 
+            <br><strong>Left:</strong> Civil Sidewalks violations before 2020, concentrated in the Tenderloin and SoMa. 
+            <br> <strong>Right:</strong> the most correlated crime categories (Drug Offense, Disorderly Conduct) after 2020, 
+            in the sameneighbourhoods. The hotspots haven't moved — only the "Civil Sidewalks" label vanished from the data. Zoom and pan 
+            each map to explore the full city.
+          </p>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="caption">
-        <div class="caption-fig">Figure 2</div>
-        <p>
-          Heatmaps of homelessness-related crime in San Francisco. <strong>Left:</strong> Civil Sidewalks
-          violations before 2020, concentrated in the Tenderloin and SoMa. <strong>Right:</strong> the
-          most correlated crime categories (Drug Offense, Disorderly Conduct) after 2020, in the same
-          neighborhoods. The hotspots haven't moved — only the "Civil Sidewalks" label vanished from the data.
-          Zoom and pan to explore the full city.
-        </p>
+
+  <!-- ── ACT III ───────────────────────────────────────────────── -->
+  <div class="divider"></div>
+  <section class="section" id="act3" style="padding-top: 3rem;"> 
+    <div class="chapter reveal">
+      <div class="chapter-num">III</div>
+      <div class="chapter-text">
+        <div class="chapter-act">Act Three</div>
+        <div class="chapter-title">What changed in 2020</div>
       </div>
     </div>
 
-    <!-- ACT 3 -->
-    <div class="section-break">
-      <span class="section-break-text">Act III — The Numbers That Don't Lie</span>
-    </div>
-
-    <div class="act-label">Act III</div>
-    <h2 class="act-heading">What changed in 2020?</h2>
-
-    <p class="prose">
+    <p class="prose reveal">
       In January 2020, District Attorney Chesa Boudin took office on a platform of criminal justice reform.
-      His office deprioritized prosecution of quality-of-life offenses, including the sit/lie ordinance that
-      had generated most Civil Sidewalks reports. SFPD, knowing the DA would not prosecute, largely stopped
-      filing such reports. The data reflects not a change in behavior on the streets, but a change in what gets 
-      written down.
+      His office deprioritized prosecution of quality-of-life offenses, including the sit/lie ordinances
+      that generated most Civil Sidewalks reports. When prosecutors stop pursuing charges, police have less
+      incentive to file reports. The data reflects not a change in behavior on the streets, but a change
+      in what gets written down.
+    </p>
+    <p class="prose reveal">
+      Some readers might wonder about COVID-19. The timing overlaps — pandemic restrictions began in March
+      2020. But the pandemic ended. San Francisco reopened. By 2024 and 2025 the city was operating
+      normally, yet Civil Sidewalks reports had not returned. A temporary disruption does not produce a
+      permanent change. A policy shift does.<br><br>
     </p>
 
-    <p class="prose">
-      Some readers might wonder about COVID-19. The timing overlaps — pandemic restrictions began in March 2020. 
-      But the pandemic ended. San Francisco reopened. By 2024 and 2025 the city was operating normally, yet 
-      Civil Sidewalks reports had not returned. A temporary disruption does not produce a permanent change. A policy shift does.
+    <div class="chapter-title">The population the data forgot</div>
+
+    <p class="prose reveal">
+      <br><br> The clearest evidence comes from outside the SFPD dataset. San Francisco conducts a biennial Point-in-Time (PIT) 
+      count of every person experiencing homelessness on a given night. In 2019, the total was 8,035 — including 5,180 unsheltered 
+      individuals. In 2024, it was 8,323. The unsheltered count has fluctuated, but the overall homeless population only grew. 
     </p>
 
-    <div class="section-break">
-      <span class="section-break-text">The Population the Data Forgot</span>
+  <!-- ── ANIMATED COUNTER ──────────────────────────────────────── -->
+  <div class="counter-banner" id="counter-banner">
+    <div class="counter-banner-inner">
+      <div class="counter-banner-label">San Francisco homeless population — Point-in-Time count</div>
+      <div class="counter-duo">
+        <div class="counter-item">
+          <div class="counter-num" id="cnt-2019">0</div>
+          <div class="counter-sub">2019</div>
+        </div>
+        <div class="counter-arrow">→</div>
+        <div class="counter-item">
+          <div class="counter-num" id="cnt-2024">0</div>
+          <div class="counter-sub">2024</div>
+        </div>
+      </div>
+      <p class="counter-context">The people did not disappear. The database entry did.</p>
     </div>
+  </div>
 
-    <h2 class="act-heading">The population the data forgot</h2>
-
-    <p class="prose">
-      The clearest evidence comes from outside the SFPD dataset. San Francisco conducts a biennial
-      Point-in-Time (PIT) count of every person experiencing homelessness on a given night. In 2019, the
-      total was 8,035 — including 5,180 unsheltered individuals. In 2024, it was 8,323. The unsheltered
-      count has fluctuated, but the overall homeless population only grew.
+    <p class="prose reveal">
+      <br> Homelessness did not decrease in San Francisco. The reports stopped. The problem did not.
     </p>
 
-    <p class="prose">
-      Homelessness did not decrease in San Francisco. The reports stopped. The problem did not.
-    </p>
-
-    <p class="prose">
-      Figure 3 below combines the normalized crime trends with the PIT homeless population count.
+    <p class="prose reveal">
+      The below figure combines the normalized crime trends with the PIT homeless population count.
       Toggle the crime types in the legend to compare trajectories. Civil Sidewalks (shown in red)
       collapses to zero; the homeless population it was documenting does not.
     </p>
 
-    <!-- VIZ 3 — Interactive Plotly -->
-    <div class="viz-block">
+  </section>
+
+  <!-- ── VIZ 3 ──────────────────────────────────────────────────── -->
+  <section class="section" style="padding-top: 0;">
+    <div class="viz-block reveal">
       <div class="viz-title">Crime Trends vs. Actual Homeless Population (2018–2025)</div>
-
-      <iframe
-        class="viz-frame-iframe"
+      <iframe class="viz-iframe-tall"
         src="visualizations/viz3_interactive_trends.html"
-        title="Interactive crime trends and homeless population chart"
-        loading="lazy"
-      ></iframe>
-      <!-- Fallback if file not present yet -->
-      <noscript>
-        <div class="viz-placeholder">
-          <div class="ph-icon">📈</div>
-          <p>Place <code>visualizations/viz3_interactive_trends.html</code> in your repo to display the interactive chart.</p>
-        </div>
-      </noscript>
-
+        title="Interactive crime trends and homeless population" loading="lazy"></iframe>
       <div class="caption">
         <div class="caption-fig">Figure 3</div>
         <p>
           An interactive comparison of crime reporting trends and actual homelessness in San Francisco.
-          <strong>Top panel:</strong> incident counts for Civil Sidewalks and its most correlated crime
-          categories, each normalized to their 2018 level (1.0 = same as 2018). Click legend items to
-          toggle crime types on and off. Civil Sidewalks (red) collapses to near-zero after 2020, while
-          correlated crimes show more moderate changes.
-          <strong>Bottom panel:</strong> San Francisco's biennial Point-in-Time homeless count.
-          The total was 8,035 in 2019 and 8,323 in 2024. The population those reports were meant to
-          address did not shrink — the reporting did.
+          <br><strong>Top panel:</strong> incident counts for Civil Sidewalks and its most correlated 
+          crime categories, each normalized to their 2018 level (1.0 = same as 2018). Click legend items 
+          to toggle crime types on and off. Civil Sidewalks (red) collapses to near-zero after 2020, while 
+          correlated crimes show more moderate changes. <br><strong>Bottom panel:</strong> San Francisco's
+          biennial Point-in-Time homeless count. The total was 8,035 in 2019 and 8,323 in 2024.
+          The population those reports were meant to address did not shrink — the reporting did.
         </p>
       </div>
     </div>
+  </section>
 
-    <!-- Conclusion -->
-    <div class="section-break">
-      <span class="section-break-text">Why This Matters</span>
+  <!-- ── CONCLUSION ────────────────────────────────────────────── -->
+  <div class="divider"></div>
+  <section class="section" id="conclusion" style="padding-top: 3rem;">
+    <div class="chapter reveal">
+      <div class="chapter-num" style="color: var(--rule);">IV</div>
+      <div class="chapter-text">
+        <div class="chapter-act">Conclusion</div>
+        <div class="chapter-title">Why this matters</div>
+      </div>
     </div>
 
-    <h2 class="act-heading">Why this matters</h2>
-
-    <p class="prose">
+    <p class="prose reveal">
       This is a concrete example of what Richardson, Schultz, and Crawford (2019) call <em>"dirty data"</em> —
       the insight that police datasets are not neutral measurements of crime, but reflections of enforcement
       priorities, political incentives, and institutional decisions. A naive analysis of SFPD data would
       conclude that sidewalk-related offenses were eliminated. A careful one recognizes that only the
       reporting was eliminated.
     </p>
-    
-    <p class="prose">
-    More broadly, crime statistics do not measure crime itself, but policing decisions. When enforcement priorities 
-    change, the numbers change, regardless of what is happening on the street. For anyone using crime data to draw 
-    conclusions — whether evaluating policy, allocating resources, or training a predictive model — this distinction matters.
+
+    <p class="prose reveal">
+      More broadly, crime statistics do not measure crime itself, but policing decisions. When enforcement priorities 
+      change, the numbers change, regardless of what is happening on the street. For anyone using crime data to draw 
+      conclusions — whether evaluating policy, allocating resources, or training a predictive model — this distinction matters.
     </p>
 
-    <div class="pullquote">
-      <p>
-        "A dramatic trend in administrative data may reflect a bureaucratic shift — not a change in the world it purports to describe."
-      </p>
+    <div class="pullquote reveal">
+      <p>"A dramatic trend in administrative data may reflect a bureaucratic shift — not a change in the world it purports to describe."</p>
     </div>
-
-    <p class="prose">
+    
+    <p class="prose reveal">
       For anyone using crime data to draw conclusions — whether evaluating policy, allocating resources,
       or training a predictive model — this distinction matters. The data does not lie. But it does not
       tell the whole truth either.
     </p>
 
-    <!-- References -->
-    <div class="references">
-      <div class="references-heading">References &amp; Further Reading</div>
+    
+
+    <div class="references reveal">
+      <div class="references-heading">References</div>
       <ol class="ref-list">
-        <li>
-          SF OpenData. <em>Police Department Incident Reports: 2018 to Present.</em>
-          <a href="https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-2018-to-Present/wg3w-h783" target="_blank" rel="noopener">data.sfgov.org</a>
-        </li>
-        <li>
-          SF Department of Homelessness and Supportive Housing.
-          <em>Homelessness Trends Dashboard — Point-in-Time Counts (2005–2024).</em>
-          <a href="https://www.sf.gov/homelessness-trends-dashboard-inflow-and-outflow-analysis" target="_blank" rel="noopener">sf.gov</a>
-        </li>
-        <li>
-          Segel, E. &amp; Heer, J. (2010). <em>Narrative Visualization: Telling Stories with Data.</em>
-          IEEE Transactions on Visualization and Computer Graphics, 16(6), 1139–1148.
-        </li>
-        <li>
-          The SF Chronicle. <em>Chesa Boudin won't prosecute quality-of-life crimes. What does that mean?</em>
-          January 2020. <a href="https://www.sfchronicle.com" target="_blank" rel="noopener">sfchronicle.com</a>
-        </li>
-        <li>
-          US Department of Housing and Urban Development. <em>2024 Annual Homelessness Assessment Report (AHAR).</em>
-          <a href="https://www.huduser.gov/portal/datasets/ahar.html" target="_blank" rel="noopener">huduser.gov</a>
-        </li>
+        <li>Richardson, R., Schultz, J.M., &amp; Crawford, K. (2019). <em>Dirty Data, Bad Predictions: How Civil Rights Violations Impact Police Data, Predictive Policing Systems, and Justice.</em> NYU Law Review, 94.</li>
+        <li>San Francisco Department of Homelessness and Supportive Housing. <em>Homelessness Trends Dashboard — Point-in-Time Counts (2005–2024).</em> <a href="https://www.sf.gov/homelessness-trends-dashboard-inflow-and-outflow-analysis" target="_blank" rel="noopener">sf.gov</a></li>
+        <li>San Francisco District Attorney's Office. <em>Policy directives under DA Chesa Boudin, 2020–2022.</em></li>
+        <li>Segel, E. &amp; Heer, J. (2010). <em>Narrative Visualization: Telling Stories with Data.</em> IEEE Transactions on Visualization and Computer Graphics, 16(6), 1139–1148.</li>
+        <li>SF OpenData. <em>Police Department Incident Reports: 2018 to Present.</em> <a href="https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-2018-to-Present/wg3w-h783" target="_blank" rel="noopener">data.sfgov.org</a></li>
       </ol>
     </div>
+  </section>
 
-  </main>
-
-  <!-- ── FOOTER ─────────────────────────────────────────── -->
+  <!-- ── FOOTER ─────────────────────────────────────────────────── -->
   <footer>
     <p>
       Built with Python · Plotly · Folium · Matplotlib<br>
-      Social Data Analysis and Visualization — DTU / Course Assignment · Spring 2026<br>
+      Social Data Analysis and Visualization — DTU · Spring 2026 · Assignment 2<br>
       Data: SFPD Incident Reports via SF OpenData
     </p>
   </footer>
 
+  <!-- ── JAVASCRIPT ─────────────────────────────────────────────── -->
+  <script>
+    /* 1. NAV + PROGRESS BAR */
+    const nav = document.getElementById('main-nav');
+    const bar = document.getElementById('progress-bar');
+    window.addEventListener('scroll', () => {
+      const scrolled = window.scrollY;
+      const total    = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (scrolled / total * 100) + '%';
+      nav.classList.toggle('scrolled', scrolled > 40);
+    }, { passive: true });
+
+    /* 2. SCROLL REVEAL */
+    const revealObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+    /* 3. ANIMATED COUNTERS */
+    function animateCount(el, target, duration) {
+      const start = performance.now();
+      function tick(now) {
+        const p    = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target).toLocaleString();
+        if (p < 1) requestAnimationFrame(tick);
+        else el.textContent = target.toLocaleString();
+      }
+      requestAnimationFrame(tick);
+    }
+    let countersRun = false;
+    const counterObs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !countersRun) {
+        countersRun = true;
+        animateCount(document.getElementById('cnt-2019'), 8035, 1600);
+        animateCount(document.getElementById('cnt-2024'), 8323, 2000);
+        counterObs.disconnect();
+      }
+    }, { threshold: 0.4 });
+    counterObs.observe(document.getElementById('counter-banner'));
+
+    /* Act I Panel için Hızlı Animasyon */
+    let act1CountersRun = false;
+    const act1CounterObs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !act1CountersRun) {
+        act1CountersRun = true;
+        
+        // 332'ye say (600ms)
+        animateCount(document.getElementById('act1-cnt-1'), 332, 800); 
+        
+        // 25'e say (600ms)
+        animateCount(document.getElementById('act1-cnt-2'), 25, 800);
+        
+        // %92 için (animateCount fonksiyonun % işaretini destekliyorsa)
+        // Değilse manuel ekleyelim:
+        animateCount(document.getElementById('act1-cnt-3'), 92, 800, true); 
+        
+        act1CounterObs.disconnect();
+      }
+    }, { threshold: 0.3 });
+
+    act1CounterObs.observe(document.querySelector('.stat-panel-inner'));
+
+    /* Güncellenmiş animateCount (Yüzde desteği ile) */
+    function animateCount(el, target, duration, isPercent = false) {
+      const start = performance.now();
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        const current = Math.round(ease * target);
+        el.textContent = current.toLocaleString() + (isPercent ? "%" : "");
+        if (p < 1) requestAnimationFrame(tick);
+        else el.textContent = target.toLocaleString() + (isPercent ? "%" : "");
+      }
+      requestAnimationFrame(tick);
+    }
+
+  </script>
 </body>
 </html>
